@@ -1,0 +1,907 @@
+u´ZµÏm˛ôZäv⁄±Ó∏<template>
+<div>
+    <form @submit.prevent="submit" class="form-horizontal"   @input="productForm.errors.clear($event.target.name)">
+        <!-- Photos -->
+        <div v-if="Object.keys(productForm.errors.errors).length > 0">
+            <!--<span class="error-title">Please Fix below errors</span>-->
+            <ul class="erros">
+                <li v-if="productForm.errors.has('photos')"><show-error :form-name="productForm" prop-name="photos"></show-error></li>
+                <li v-if="productForm.errors.has('name')"><show-error :form-name="productForm" prop-name="name"></show-error></li>
+                <li v-if="productForm.errors.has('description')"><show-error :form-name="productForm" prop-name="description"></show-error></li>
+                <li v-if="productForm.errors.has('subcategory_id')"><show-error :form-name="productForm" prop-name="subcategory_id"></show-error></li>
+                <li v-if="productForm.errors.has('sizes')"><show-error :form-name="productForm" prop-name="sizes"></show-error></li>
+                <li v-if="productForm.errors.has('condition')"><show-error :form-name="productForm" prop-name="condition"></show-error></li>
+                <li v-if="productForm.errors.has('style_identity_ids')"><show-error :form-name="productForm" prop-name="style_identity_ids"></show-error></li>
+                <li v-if="productForm.errors.has('colors')"><show-error :form-name="productForm" prop-name="colors"></show-error></li>
+                <li v-if="productForm.errors.has('purchase_price')"><show-error :form-name="productForm" prop-name="purchase_price"></show-error></li>
+
+            </ul>
+        </div>
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.photos')}}*</strong><br> {{ trans('seller.photos_info')}}</p>
+            <div class="row">
+                <div class="col-sm-9">
+                    <b-card-body>
+                        <div class="form-group mb-3">
+<!--                             <vue-upload-multiple-image
+                             @upload-success="uploadImageSuccess"
+                             @before-remove="beforeRemove"
+                             @edit-image="editImage"
+                             :data-images="images"
+                             :markIsPrimaryText="`Gallery new image`"
+                             :primaryText="`Gallery images`"
+                             :popupText="`Gallery default image`"
+                             :dropText="`Drag`"
+                             :dragText="`Drop`"
+                             :browseText="`(or) Select`"
+                             idUpload="myIdUpload"
+                             editUpload="myIdEdit"></vue-upload-multiple-image>  -->
+                             <VueUploadMultipleImageCustom
+                             ref="multiImage"
+                             @set-photos="setPhotos"
+                             @upload-success="uploadImageSuccess"
+                             @before-remove="beforeRemove"
+                             @edit-image="editImage"
+                             @re-crop="reCropImage"
+                             :data-images="images"
+                             :markIsPrimaryText="`Gallery new image`"
+                             :primaryText="`Gallery images`"
+                             :popupText="`Gallery default image`"
+                             :dropText="`Drag`"
+                             :dragText="`Drop`"
+                             :browseText="`(or) Select`"
+                             idUpload="myIdUpload"
+                             @refresh-images="refreshImagesData"
+                             editUpload="myIdEdit"></VueUploadMultipleImageCustom >
+
+                        </div>
+                    </b-card-body>
+                </div>
+            </div>
+        </div>
+        <!-- Title -->
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.product_title')}}*</strong> <br>{{ trans('seller.product_title_info')}}</p>
+            <div class="row">
+                <div class="col-sm-12">
+                    <b-card-body>
+                        <div class="form-group mb-3">
+                            <input class="form-control"
+                                v-model="productForm.name"
+                                name="name"
+                                type="text" value=""
+                                placeholder="e.g : (Levis Jeans Size 28)" >
+                            <div>
+                                <span class="style-input" v-if="productForm.name !== null">{{ productForm.name.length }}/100</span>
+                            </div>
+
+                            <!--<show-error :form-name="productForm" prop-name="name"></show-error>-->
+                        </div>
+                    </b-card-body>
+                </div>
+            </div>
+        </div>
+        <!-- Description -->
+        <div class="card">
+            <p class="card-header"><strong> {{ trans('seller.description')}}*</strong><br> {{ trans('seller.description_info')}}</p>
+            <div class="row">
+                <div class="col-sm-12">
+                    <b-card-body>
+                        <div class="form-group">
+                            <autosize-textarea class="form-control" v-model="productForm.description" :placeholder="trans('seller.description_placeholder')" rows="3" name="description" ></autosize-textarea>
+                            <!--<show-error :form-name="productForm" prop-name="description"></show-error>-->
+                        </div>
+                    </b-card-body>
+                </div>
+            </div>
+        </div>
+        <!-- categories -->
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.category')}}*</strong> <br>{{ trans('seller.category_info')}}</p>
+            <div class="row">
+                <div class="col-sm-4">
+                    <b-card-body>
+                        <div class="form-group mb-3">
+                            <multiselect v-model="productForm.subcategory_id"
+                                        :options="categories"
+                                        group-values="subcategories"
+                                        group-label="name"
+                                        placeholder="Type to search"
+                                        track-by="id"
+                                        label="name"
+                                        @select="changeList"
+                                        @input="clearError('subcategory_id')"
+                                        >
+                                <span slot="noResult">Oops! No elements found. Consider changing the search query.</span>
+                            </multiselect>
+                            <!--<show-error :form-name="productForm" prop-name="subcategory_id"></show-error>-->
+                        </div>
+                       </b-card-body>
+                </div>
+            </div>
+        </div>
+        <!-- Sizes -->
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.size')}}*</strong> <br>{{ trans('seller.size_info')}}</p>
+            <div class="row">
+                <div class="col-sm-4">
+                    <b-card-body>
+                        <div class="form-group mb-3">
+                            <!-- <multiselect v-model="productForm.sizes"
+                                        tag-placeholder="Add this as new size"
+                                        placeholder="Search or add a size"
+                                        :options="sizelist"
+                                        :taggable="true"
+                                        @tag="addSize" required>
+                            </multiselect> -->
+                            <multiselect v-model="productForm.sizes"
+                                                :searchable="true"
+                                                :options="sizelist"
+                                                @select="changeSizeList"
+                                                placeholder="Search or add a size"
+                                                @input="clearError('sizes')" >
+                            </multiselect>
+                            <br />
+                            <input class="form-control" v-if="Iscustomsize" type="text" value="" v-model="customsize" name="name" placeholder="e.g : custom size" >
+
+                            <!--<show-error :form-name="productForm" prop-name="sizes"></show-error>-->
+                        </div>
+                    </b-card-body>
+                </div>
+            </div>
+        </div>
+        <!-- Condition -->
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.condition')}}*</strong> <br>{{ trans('seller.condition_info')}}</p>
+            <div class="row">
+                <div class="col-sm-4">
+                    <b-card-body>
+                        <div class="form-group">
+                            <multiselect v-model="productForm.condition"
+                                         track-by="value"
+                                         label="label"
+                                         placeholder="Select one Condition"
+                                         :options="conditions"
+                                         :searchable="false"
+                                         :allow-empty="false"
+                                         :custom-label="valWithLab"
+                                         @input="clearError('condition')">
+                                <template slot="singleLabel" slot-scope="{ option }">
+                                    <strong>{{ option.value }} - {{ option.label }}</strong>
+                                </template>
+                            </multiselect>
+                            <!--<show-error :form-name="productForm" prop-name="condition"></show-error>-->
+                        </div>
+                    </b-card-body>
+                </div>
+            </div>
+        </div>
+        <!-- style identity -->
+
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.style_identity')}}*</strong> <br>{{ trans('seller.style_identity_info')}}</p>
+            <div class="modal-body">
+            <div class="row">
+                <div class="carousel-item "v-bind:class = "(index == 0)?'active':''">
+                    <div class="row">
+                        <div class="col-6 col-lg-2 " v-for="image in stylesCategory">
+                            <div :class="'product-item-box '+ image.name+image.options[0].id "class="chose" v-bind:id="'style_' + image.id" v-bind:data-id="image.id" @click="selectStyle(image.name+image.options[0].id, image.options[0],image.id)">
+                                <div class="img-wrap">
+                                    <img :src="image.options[index].img_url" class="img-fluid" alt="">
+                                </div>
+                                <div class="title-info style-icon">
+                                    <h6 class="product-title" style="text-align: center"><img :src="notIcon" style="margin-left: 74%" class="tooltip tooltip-img show"  data-toggle="tooltip" data-placement="top" v-b-tooltip :title="image.tool_tip_text">{{image.name}}</h6>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <br>
+                    <div class="col-sm-12 custom-control">
+                            <label for="vehicle1"><input class="is_specialty_class" type="checkbox" name="vehicle1" value="0" @click="isSpecialtyItemChecked($event)":checked="this.is_specialty_item == 1 ? true: false"/>
+                                Check for special occassion or specialty item</label><br>
+                    </div>
+                </div>
+
+                <!--<div class="title-info " style="text-align: center">-->
+                <!--<h6 class="product-title">{{image.name}}</h6>-->
+                <!--</div>-->
+            </div>
+            </div>
+            <!--<div class="row">-->
+                <!--<div class="col-sm-9">-->
+                    <!--<b-card-body>-->
+                        <!--<div class="form-group thumbnails">-->
+                                <!--<multiselect v-model="selectedStyleCode"-->
+                                         <!--placeholder="How would you identify this item?"-->
+                                         <!--label="name"-->
+                                         <!--track-by="name"-->
+                                         <!--:options="styles"-->
+                                         <!--:option-height="115"-->
+                                         <!--:max="2"-->
+                                         <!--:multiple="true"-->
+                                         <!--required>-->
+                                <!--<template slot="singleLabel" slot-scope="props">-->
+                                    <!--<img class="option__image" :src="props.option.icon" :alt="props.option.desc" width="60" height="60">-->
+                                    <!--<span class="option__desc">-->
+                                        <!--<span class="option__title font-weight-bold">-->
+                                            <!--{{ props.option.name }}-->
+                                        <!--</span>-->
+                                    <!--</span>-->
+                                <!--</template>-->
+                                <!--<template slot="option" slot-scope="props">-->
+                                    <!--<img class="option__image" :src="props.option.icon" :alt="props.option.desc" width="60" height="60">-->
+                                    <!--<div class="option__desc">-->
+                                        <!--<span class="option__title font-weight-bold">{{ props.option.name }}</span>-->
+                                        <!--<span class="option__small">{{ props.option.desc }}</span>-->
+                                    <!--</div>-->
+                                <!--</template>-->
+                            <!--</multiselect>-->
+                            <!--<show-error :form-name="productForm" prop-name="style_identity"></show-error>-->
+                        <!--</div>-->
+                    <!--</b-card-body>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <!-- Color -->
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.color')}}*</strong><br> {{ trans('seller.color_info') }}</p>
+            <div class="row">
+                <div class="col-sm-9">
+                    <b-card-body>
+                        <div class="form-group">
+                            <select-color
+                                    v-if="selectedColorsCode instanceof Array"
+                                    v-model="selectedColorsCode"
+                                    :is-multiple="true"
+                                    :use-label="true"
+                                    :dataColors="colors"
+                                    :limit=3
+                                    @onselectmultiplecolor="onselectmultiplecolor">
+                            </select-color>
+                            <!--</select-color>-->
+                            <!-- <multiselect v-model="selectedColorsCode"
+                                         :multiple="true"
+                                         :options="colors"
+                                         :max="3"
+                                         placeholder="Search or add a color"
+                                         label="name"
+                                         track-by="code">
+                                        <template slot="tag" slot-scope="{ option, remove }">
+                                            <span class="custom__tag" :style="`background:${option.code}`">
+                                                <span>{{ option.name }}</span>
+                                                <span class="custom__remove" @click="remove(option)">‚ùå</span>
+                                                </span>
+                                        </template>
+                                        <template slot="option" slot-scope="props">
+                                            <div class="option__desc">
+                                                <span class="option__title" >
+                                                    <span class="size-15px d-inline-block mr-2 rounded border" :style="`background:${props.option.code}`"></span>
+                                                    {{ props.option.name }}
+                                                </span>
+                                            </div>
+                                        </template>
+                            </multiselect> -->
+                            <!--<show-error :form-name="productForm" prop-name="colors"></show-error>-->
+                        </div>
+                    </b-card-body>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price -->
+        <div class="card">
+            <p class="card-header"><strong>{{ trans('seller.price') }}*</strong><br> {{ trans('seller.price_info') }}</p>
+            <div class="row">
+                <div class="col-sm-4">
+                    <b-card-body>
+                        <div class="form-group">
+                            <input class="form-control " type="text" value="" v-model="productForm.purchase_price" v-mask="'####.##'" name="purchase_price" placeholder="20.00">
+                            <!--<show-error :form-name="productForm" prop-name="purchase_price"></show-error>-->
+                            <div>
+                                <label for="vehicle1"><input class="luxury-item-create-class" type="checkbox"
+                                                             name="vehicle1" value="0"
+                                                             @click="luxuryItemsSelectionCreate($event)"
+                                                             :checked="this.is_luxury_item == 1 ? true: false"/>
+                                    This is a luxury item</label><br>
+                            </div>
+                        </div>
+                        <!--<div class="form-group mb-3">-->
+                            <!--<label for="pocket_price">{{ trans('seller.unit_price_info') }}</label>-->
+                            <!--<label for="pocket_price">${{ productForm.unit_price }}</label>-->
+                        <!--</div>-->
+                    </b-card-body>
+                </div>
+            </div>
+        </div>
+        <!-- end form -->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center">
+                    <button type="button" class="btn w-sm btn-secondary waves-effect waves-light" @click="submit(1)">{{ trans('seller.save_later') }}</button>
+                    <button type="submit" class="btn w-sm btn-success waves-effect waves-light text-white">{{ trans('seller.list_it') }}</button>
+                </div>
+            </div>
+            <!-- end col -->
+        </div>
+        <!-- end row -->
+    </form>
+</div>
+<!-- end row -->
+</template>
+<style>
+    .style-input{
+        position: absolute;
+        right: 38px;
+        font-size: 15px;
+        top: 33%;
+        color: darkgrey;
+    }
+    .style-icon{
+        margin-top: 4%
+    }
+    .invalid-feedback {
+        font-weight: bold !important;
+    }
+    .error-title {
+        font-weight: bold;
+        color: red;
+        font-size: 17px;
+        text-align: center;
+    }
+
+</style>
+
+<script>
+import {
+    mapActions,
+    mapState,
+    mapGetters
+} from "vuex";
+import datepicker from 'vuejs-datepicker'
+import {
+    Datetime
+} from 'vue-datetime'
+import 'vue-datetime/dist/vue-datetime.css'
+import switches from 'vue-switches';
+import htmlEditor from '@js/components/html-editor'
+import uploadImage from '@js/components/upload-image'
+import selectColor from '@js/components/select-color'
+import autosizeTextarea from '@js/components/autosize-textarea'
+import VueUploadMultipleImage from 'vue-upload-multiple-image'
+import VueUploadMultipleImageCustom from './_bak/VueUploadMultipleImageCustom';
+import notificationIcon from '@assets/home/images/notification-icon.png';
+import tickIcon from '@assets/images/tick.png';
+
+import Vue from 'vue';
+// Import component
+import Loading from 'vue-loading-overlay';
+// Import stylesheet
+import 'vue-loading-overlay/dist/vue-loading.css';
+// Init plugin
+Vue.use(Loading);
+
+
+export default {
+    name: "create_form",
+    props: [],
+    components: {
+        switches,
+        datepicker,
+        Datetime,
+        uploadImage,
+        selectColor,
+        htmlEditor,
+        autosizeTextarea,
+        VueUploadMultipleImage,
+        VueUploadMultipleImageCustom,
+
+    },
+    data() {
+        return {
+            productForm: new Form({
+                id:"",
+                name: "",
+                added_by: "seller",
+                category_id: 0,
+                subcategory_id: 0,
+                photos: [],
+                thumbnail_img: null,
+                description: "",
+                unit_price: 0,
+                purchase_price:'',
+                colors: [],
+                published: 1,
+                featured: 0,
+                current_stock: 1,
+                unit: "pc",
+                min_qty: 1,
+                discount: 0,
+                discount_type: "amount",
+                tax: 0,
+                tax_type: "amount",
+                shipping_type: "flat_rate",
+                style_identity: [0],
+                style_identity_ids: {},
+                shipping_cost: 0,
+                num_of_sale: 0,
+                condition: 7,
+                meta_title: null,
+                meta_description: null,
+                meta_img: null,
+                // pdf: null,
+                rating: 0,
+                // barcode: null,
+                // digital: 0,
+                // file_name: null,
+                // file_path: null,
+                sizes: null,
+                is_specialty_item:0,
+                is_luxury_item: 0,
+                is_draft:0,
+                // deleteImages:[]
+            }),
+            isButtonDisabled: true,
+            loading: false,
+            Iscustomsize: false,
+            customsize: null,
+            disableSubmitButton: false,
+            categories: [],
+            subcategories: {},
+            colors: [],
+            conditions: [],
+            photos: [],
+            styles: [],
+            stylesCategory: [],
+            formTagList: '',
+            sizelist: ["0", "1", "2", "3", "4", "XXS", "XS", "S", "M", "L", "XL", "2XL", "NO Size", "4.5", "7", "8", "9", "10"],
+            cl_sizes: [],
+            accs_sizes: [],
+            selected_category: null,
+            images: [],
+            choices_values: [],
+            choicesList: ['new', 'list'],
+            imageSelected: {
+                id: '',
+                src: '',
+                alt: ''
+            },
+            selectedColorsCode: null,
+            selectedStyleCode:[],
+            selectedStyleIds: [0],
+            is_specialty_item:0,
+            is_luxury_item: 0,
+            product_id: 0,
+            cropId:'',
+            isEdit:0,
+            imageCount: 0,
+            index:0,
+            notIcon:  notificationIcon,
+            isDraft: 0,
+            tickIcon: tickIcon,
+            s_category:[],
+        };
+    },
+    mounted() {
+        this.fetchProductData();
+        this.getDetails();
+    },
+    computed: {
+        filteredSubcategories: function () {
+            if (this.productForm.category_id != 0)
+                return _.find(this.categories, subcat => subcat.id === this.productForm.category_id).subcategories;
+
+        }
+    },
+    methods: {
+        fetchProductData() {
+            let scope = this;
+            setTimeout(() =>
+            axios.post('/api/product/addNew')
+                .then(response => response.data)
+                .then(response => {
+                    localStorage.setItem('product_id', response.incomplete.id);
+                    scope.product_id = response.incomplete.id;
+                    scope.isDraft = response.isDraft;
+                    // scope.pId = response.incomplete.id;
+                    response.incomplete.files.forEach(function(item,index){
+                        scope.images.push({ name: item.file_name, path: item.file_url, highlight: 0, default: 0, size: item.file_size , thumbnail_id:item.id, id:item.id});
+                    });
+                })
+                .catch(error => {
+                    console.log(error);
+                })
+                ,200);
+            axios.get('/api/product/pre-requisite')
+                .then(response => response.data)
+                .then(response => {
+                    this.categories = response.categories;
+                    this.conditions = response.conditions;
+                    this.colors = response.colors;
+                    this.styles = response.styles;
+                    this.stylesCategory = response.stylesCategory;
+                    this.sizelist = response.cl_sizes;
+                    this.cl_sizes = response.cl_sizes;
+                    this.accs_sizes = response.accs_sizes;
+                })
+                .catch(error => {
+                    console.log(error);
+                    helper.showDataErrorMsg(error);
+                    // this.$router.push('/seller/home');
+                })
+        },
+        setPhotos(photos) {
+            this.productForm.photos = photos;
+        },
+        getDetails(){
+            setTimeout(() =>
+            axios.get('/api/product/details/' + this.product_id)
+                .then(response => response.data)
+                .then(response => {
+                    localStorage.setItem('product_id', this.product_id)
+                    this.productForm.name = response.productDetails.name;
+                    this.productForm.description = response.productDetails.description;
+                    // this.categories = response.categories;
+                    this.selectedColorsCode = response.productDetails.colors;
+                    if (this.selectedColorsCode == null) {
+                        this.selectedColorsCode = [];
+                    }
+                    // this.selectedColorsCode = this.productForm.selectedColorsCode;
+                    this.productForm.condition = response.productDetails.condition;
+                    this.productForm.condition = response.conditions.find(c => c.value == this.productForm.condition);
+                    this.productForm.purchase_price = response.productDetails.purchase_price;
+                    this.productForm.subcategory_id = response.productDetails.subcategory_id;
+                    this.productForm.subcategory_id = response.subcategories.find(c => c.id == this.productForm.subcategory_id);
+                    // this.s_category = this.productForm.subcategory_id;
+                    console.log(response.productDetails);
+                    this.productForm.sizes = response.productDetails.sizes;
+                    this.productForm.style_identity_ids = response.productDetails.style_identity_ids;
+                    this.productForm.is_specialty_item = response.productDetails.is_specialty_item;
+                    this.productForm.is_luxury_item = response.productDetails.is_luxury_item;
+                    this.is_luxury_item = response.productDetails.is_luxury_item;
+                    this.is_specialty_item = response.productDetails.is_specialty_item;
+                    this.selectedStyleIds = response.productDetails.style_identity_ids;
+                    if(this.selectedStyleIds == null){
+                        this.selectedStyleIds = [0];
+                    }
+                    this.selectSizeOption(response);
+                    this.selectionStyleClicked();
+                    this.showSelectedTickIcon();
+
+                })
+                .catch(error => {
+                    console.log(error);
+                    helper.showDataErrorMsg(error);
+                    // this.$router.push('/seller/home');
+                })
+                , 500);
+        },
+        luxuryItemsSelectionCreate(event) {
+            let scope = this;
+            if (event.target.checked) {
+                scope.is_luxury_item = 1;
+            }else{
+                scope.is_luxury_item = 0;
+            }
+        },
+        uploadImageSuccess(formData, index, fileList) {
+            let loader = this.$loading.show({
+                // Optional parameters
+                container: this.fullPage ? null : this.$refs.formContainer,
+                canCancel: false,
+            });
+            this.clearError('photos');
+            axios.post('/api/admin/upload-photos',formData)
+                .then(response => response.data)
+                .then(response => {
+                    // if(this.cropId == ''){
+                    //     this.images.push({ name: response.data.file_name, path: response.data.file_url, highlight: 0, default: 0, size: response.data.file_size , thumbnail_id:response.data.id, id: response.data.id});
+
+                    //     this.productForm.photos.push(response.data.id);
+                    //     this.productForm.photos.push(response.data.thumbnail_id);
+                    // }
+                    // fileList[index].id = response.data.id
+                    // fileList[index].thumbnail_id = response.data.thumbnail_id;
+                    // this.$refs.multiImage.imageUploaded(index,response.data.file_url);
+                    // this.$refs.multiImage.imageUploaded(index,response.data.file_url, response.data.id);
+                    toastr.success(response.message);
+                    loader.hide();
+                    this.isEdit = response.data.is_edit;
+                    let uploadType = localStorage.getItem('upload_type');
+                    if (this.imageCount == 0 && uploadType == 1) {
+                        this.imageCount = localStorage.getItem('image_count');
+                    }
+                    if (uploadType == 0) {
+                        this.$bvModal.hide('cropper-modal')
+                    }
+                    if (uploadType == 1) {
+                        this.imageCount--;
+                    }
+                    if (this.$refs.multiImage.uploadedImageCount == 0 && uploadType == 1) {
+                        this.$bvModal.hide('cropper-modal')
+                        let scope = this;
+                        axios.post('/api/product/addNew')
+                            .then(response => response.data)
+                            .then(response => {
+                                scope.images = [];
+                                response.incomplete.files.forEach(function(item,index){
+                                    scope.images.push({ name: item.file_name, path: item.file_url, highlight: 0, default: 0, size: item.file_size , thumbnail_id:item.id, id:item.id});
+                                });
+                            })
+                            .catch(error => {
+                            })
+                        // this.images.push({ name: response.data.file_name, path: response.data.file_url, highlight: 0, default: 0, size: response.data.file_size , thumbnail_id:response.data.id, id: response.data.id});
+                    }
+
+                }).catch(error => {
+                    if (error.response.status == 422) {
+                        toastr.error(error.response.data.error);
+                    } else if (error.response.status == 413 || error.response.status == 500) {
+                        toastr.error(i18n.general.file_too_large);
+                    } else
+                        helper.showDataErrorMsg(error);
+                });
+        },
+
+        beforeRemove(removed, index, done, fileList) {
+            console.log(removed);
+            var r = confirm("remove image")
+            if (r == true) {
+                done()
+                let formData = new FormData()
+                formData.append('path', removed.path);
+                formData.append('product_id', localStorage.getItem('product_id'));
+                axios.post('/api/admin/delete-photo', formData)
+                    .then(response => response.data)
+                    .then(response => {
+                        this.images.splice(index, 1)
+                        toastr.success(response.message);
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            } else {
+                console.log('error in deleting');
+            }
+        },
+        selectionStyleClicked() {
+            let scope = this;
+            let ids = scope.selectedStyleIds;
+            setTimeout(function () {
+                $.each(ids, function(key, value) {
+                    $('body #style_' + value).addClass('selected');
+                });
+
+            }, 1000);
+        },
+        showSelectedTickIcon() {
+            setTimeout(function () {
+                $('.vue-select-color__thumbnail--selected').css('background-image', 'url(' + tickIcon + ')');
+                $('.vue-select-color__thumbnail--selected').css('background-repeat', 'no-repeat');
+                $('.vue-select-color__thumbnail--selected').css('background-position', 'center');
+            }, 2000);
+        },
+        selectSizeOption(data) {
+            let cat_id =data.productDetails.category_id;
+            if(cat_id == 1){
+                this.sizelist = data.cl_sizes;
+            }
+            else{
+                this.sizelist = data.accs_sizes;
+            }
+            if(typeof(this.productForm.sizes) == "string" && this.productForm.sizes.includes("cst")){
+                this.Iscustomsize = true;
+                this.customsize = this.productForm.sizes.split('-')[1];
+                this.productForm.sizes = 'Custom';
+            } else{
+                this.Iscustomsize = false;
+            }
+        },
+
+        editImage(formData, index, fileList) {
+            console.log('edit data', formData, index, fileList);
+        },
+        refreshImagesData()
+        {
+            let scope = this;
+            axios.post('/api/product/addNew')
+                .then(response => response.data)
+                .then(response => {
+                    scope.images = [];
+                    response.incomplete.files.forEach(function (item, index) {
+                        scope.images.push({
+                            name: item.file_name,
+                            path: item.file_url,
+                            highlight: 0,
+                            default: 0,
+                            size: item.file_size,
+                            thumbnail_id: item.id,
+                            id: item.id
+                        });
+                    });
+                })
+                .catch(error => {
+                })
+        },
+        submit(isDraft = '') {
+            this.loading = true;
+            this.disableSubmitButton = true;
+            // this.productForm.style_identity = _.map(this.selectedStyleCode, 'name');
+            if (this.selectedStyleIds.includes(0)){
+                this.productForm.style_identity_ids = [];
+            }else{
+                this.productForm.style_identity_ids = this.selectedStyleIds;
+            }
+
+            // this.productForm.colors = _.map(this.selectedColorsCode, 'code');
+            this.productForm.colors = this.selectedColorsCode;
+            this.productForm.photos = this.images;
+            this.productForm.is_luxury_item = this.is_luxury_item;
+            this.productForm.is_specialty_item = this.is_specialty_item;
+            this.productForm.id = localStorage.getItem('product_id');
+            let categoryId = '';
+            let subCategoryId = '';
+            // this.productForm.subcategory_id = this.s_category;
+            if (typeof (this.productForm.subcategory_id) !== "undefined") {
+                categoryId = this.productForm.subcategory_id['category_id'];
+                subCategoryId = this.productForm.subcategory_id['id'];
+            }
+            var savedSubCategoryId = this.productForm.subcategory_id;
+            this.productForm.category_id = categoryId;
+            this.productForm.subcategory_id = subCategoryId;
+            if(isDraft == 1){
+                this.productForm.is_draft = 1;
+            }else{
+                this.productForm.is_draft = 0;
+            }
+
+            if (this.Iscustomsize) {
+                this.productForm.sizes = 'cst-'+this.customsize;
+            }
+            this.productForm.post('/api/product/store')
+                .then(response => {
+                    this.loading = false;
+                    this.disableSubmitButton = false;
+                    toastr.success(response.message);
+                    localStorage.removeItem('product_id');
+                    // this.$emit('success');
+                    this.$router.push('/seller/products');
+                    // this.productForm.subcategory_id = this.s_category;
+                })
+                .catch(error => {
+                    $("html, body").animate({ scrollTop: 0 }, "slow");
+                    this.productForm.subcategory_id = savedSubCategoryId;
+                    this.productForm.errors.errors = error.response.data;
+                    // this.productForm.subcategory_id = this.s_category;
+                });
+        },
+        uploaded(type, id) {
+            this.productForm.thumbnail_img = id
+        },
+        close() {
+            // this.$emit('close');
+            this.$router.push('/seller/products');
+        },
+        emitOnMount() {
+            console.log('pass');
+        },
+        addStyle(newStyle) {
+            this.stylelist.push(newStyle)
+        },
+        addSize(newSize) {
+            this.sizelist.push(newSize)
+        },
+        valWithLab({value, label}) {
+            return `${value} ‚Äî  ${label}`
+        },
+        // valWithLab({value, label}) {
+        //     if (value == 5)
+        //         return `${value} - ‚Äî  ${label}`;
+        //     else
+        //         return `${value} ‚Äî  ${label}`;
+        // },
+        customStyle({name, desc}) {
+            return `${name} ‚Äì ${desc}`
+        },
+        clearError(type) {
+            this.productForm.errors.clear(type);
+        },
+        changeList(item) {
+            if (item.category_id == 1) {
+                this.sizelist = this.cl_sizes;
+            }
+            else {
+                this.sizelist = this.accs_sizes;
+            }
+            // this.s_category = this.productForm.subcategory_id;
+            // console.log(this.s_category);
+            // // if(this.productForm.subcategory_id != null){
+            // //     this.s_category.category_id = item.category_id;
+            // //     this.s_category.id = item.id;
+            // //
+            // // }else{
+            // //     this.s_category.category_id = item.category_id;
+            // //     this.s_category.id = item.id;
+            // // }
+
+        },
+        changeSizeList(item) {
+            if(item == 'Custom')
+                this.Iscustomsize = true;
+            else
+                this.Iscustomsize = false;
+        },
+        onselectmultiplecolor(codes) {
+            this.clearError('colors');
+            $('.vue-select-color__thumbnail').css('background-image' , 'none');
+            setTimeout(function () {
+               $('.vue-select-color__thumbnail--selected').css('background-image', 'url(' + tickIcon + ')');
+               $('.vue-select-color__thumbnail--selected').css('background-repeat', 'no-repeat');
+               $('.vue-select-color__thumbnail--selected').css('background-position', 'center');
+            }, 0);
+            this.selectedColorsCode = codes;
+            if (this.selectedColorsCode.includes(0)) {
+                var prodIndex = this.selectedColorsCode.indexOf(0);
+                if (prodIndex > -1) {
+                    this.selectedColorsCode.splice(prodIndex, 1);
+                }
+            }
+        },
+        selectStyle(item,product,idstyle){
+            this.clearError('style_identity_ids');
+            var count = 0;
+            let scope = this;
+            count  = scope.selectedStyleIds.length;
+            var elem = document.getElementsByClassName(item);
+            var classList = elem[0].className.split(' ');
+            if (classList.includes('selected')) {
+                $('.' + item).removeClass('selected');
+                if (scope.selectedStyleIds.includes(idstyle)) {
+                    var prodIndex = scope.selectedStyleIds.indexOf(idstyle);
+                    if (prodIndex > -1) {
+                        scope.selectedStyleIds.splice(prodIndex, 1);
+                    }
+                }
+            } else {
+                if (count < 2) {
+                    $('.' + item).addClass('selected');
+                    scope.selectedStyleIds.push(idstyle);
+                }
+                if (scope.selectedStyleIds.includes(0)) {
+                    var prodIndex = scope.selectedStyleIds.indexOf(0);
+                    if (prodIndex > -1) {
+                        scope.selectedStyleIds.splice(prodIndex, 1);
+                    }
+                }
+            }
+            console.log(scope.selectedStyleIds);
+        },
+        isSpecialtyItemChecked(event) {
+            let scope = this;
+            if (event.target.checked) {
+                scope.is_specialty_item = 1;
+            }else{
+                scope.is_specialty_item = 0;
+            }
+        },
+        reCropImage(){
+            var id = localStorage.getItem('img_id');
+            this.cropId = id;
+            axios.get('/api/admin/upload/'+id)
+                .then(response => response)
+                .then(response => {
+                    this.$refs.multiImage.reCropOriginal(response.data);
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+        }
+
+    }
+}
+</script>
+
+
+<style lang="scss" scoped>
+
+</style>
