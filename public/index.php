@@ -1,5 +1,5 @@
 <?php
-die(phpinfo());
+//die(phpinfo());
 
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;

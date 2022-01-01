@@ -2,7 +2,7 @@
     <div>
         <section class="repair">
             <div class="repair__slide">
-                <!-- <div class="repair__slide-items">
+                <div class="repair__slide-items">
                     <div class="repair__wrap center">
                         <div class="repair__title mb42">Design, Manufacture and Repair</div>
                         <div class="repair__subtitle or20">
@@ -19,7 +19,7 @@
                             alt=""
                         />
                     </div>
-                </div> -->
+                </div>
                 <div class="repair__slide-items home-layout-background">
                     <div class="repair__wrap center">
                         <div class="repair__title mb42">Design, Manufacture and Repair</div>

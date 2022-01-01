@@ -1850,7 +1850,7 @@ input[type=number] {
 }
 
 .repair__image {
-    background: linear-gradient(180deg, #1C1C1C 13.15%, rgba(28, 28, 28, 0) 126.44%);
+    background: linear-gradient(180deg, #1c1c1c00 13.15%, rgba(28, 28, 28, 0) 126.44%);
     position: absolute;
     top: 0;
     left: 0;
